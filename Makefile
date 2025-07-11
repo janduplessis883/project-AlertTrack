@@ -7,4 +7,4 @@ install-dev:
 	pip install -e .
 
 run:
-	streamlit run streamlit_app/app.py
+	streamlit run alerttrack/app.py
