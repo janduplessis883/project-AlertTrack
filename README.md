@@ -1,3 +1,5 @@
+![AlertTrack](images/pills.png)
+
 # AlertTrack Project Plan
 
 This document outlines the plan for developing the AlertTrack application, which involves scraping UK medical alert websites, storing data in Supabase, managing surgery comments via a Streamlit app, and sending Telegram notifications for new alerts.
