@@ -1,0 +1,41 @@
+# Byte-code files
+*.pyc
+__pycache__/
+
+# Distribution / packaging
+.Python
+build/
+dist/
+eggs/
+*.egg-info/
+.tox/
+
+# Virtual environment
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Editors and IDEs
+.vscode/
+.idea/
+
+# OS generated files
+.DS_Store
+.localized
+
+# Environment variables
+.env
+.env.*
+
+# Supabase credentials (if stored locally)
+supabase_credentials.json
+
+# Telegram bot token (if stored locally)
+telegram_token.txt
+
+# Scraped data or temporary files
+data/
+temp/
