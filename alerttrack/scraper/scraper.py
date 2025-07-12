@@ -5,13 +5,12 @@ from urllib.parse import urljoin
 import pandas as pd
 from firecrawl import FirecrawlApp
 import os
+import time # Added for rate limiting
+from tqdm import tqdm # Added for progress bar
 
 # It's recommended to set the API key as an environment variable
-# For this example, we'll use the provided key directly, but this is not best practice
-FIRECRAWL_API_KEY = "fc-536c6321e8d74768810df817ae07733a"
+FIRECRAWL_API_KEY = os.getenv('FIRECRAWL_API_KEY')
 # Initialize FirecrawlApp
-# It will automatically use the FIRECRAWL_API_KEY environment variable if set,
-# otherwise you can pass it as an argument: FirecrawlApp(api_key="YOUR_API_KEY")
 app = FirecrawlApp(api_key=FIRECRAWL_API_KEY)
 
 
@@ -85,59 +84,27 @@ def scrape_drug_safety_updates():
     df['detailed_content'] = None
 
     print(f"\nScraping detailed pages with Firecrawl for {len(df)} alerts...")
-    for index, row in df.iterrows():
+    for index, row in tqdm(df.iterrows(), total=len(df)): # Using tqdm for progress bar
         url = row['url']
         if url:
-            print(f"Scraping: {url}")
+            # print(f"Scraping: {url}") # Removed to avoid excessive output with tqdm
             detailed_info = scrape_detailed_alert_info_with_firecrawl(url)
             df.at[index, 'detailed_title'] = detailed_info['detailed_title']
             df.at[index, 'detailed_content'] = detailed_info['detailed_content']
-        else:
-            print(f"Skipping detailed scrape for row {index} due to missing URL.")
+            time.sleep(10) # Added to avoid rate limits
+        # else: # Removed to avoid excessive output with tqdm
+            # print(f"Skipping detailed scrape for row {index} due to missing URL.")
+
+    df.to_csv('data.csv', index=False) # Save the DataFrame to data.csv
+    print("\nSaved scraped data to data.csv")
 
     return df
 
-def process_single_html_extract(html_extract):
-    """
-    Processes a single HTML extract to get the title and URL,
-    then scrapes the URL with Firecrawl and returns a DataFrame.
-    """
-    soup = BeautifulSoup(html_extract, 'html.parser')
-    link_tag = soup.find('a')
-
-    if link_tag and isinstance(link_tag, Tag):
-        title = link_tag.get_text(strip=True)
-        href = link_tag.get('href')
-        if href and title and isinstance(href, str):
-            # Assuming the href is relative to a base URL, let's use a dummy one for this example
-            # In a real scenario, you'd use the actual base URL if the link is relative
-            full_url = urljoin("https://www.gov.uk", href)
-
-            data = [{
-                'title': title,
-                'url': full_url,
-                'publish_date': None # Not available from the single extract
-            }]
-            df = pd.DataFrame(data)
-            df['detailed_title'] = None
-            df['detailed_content'] = None
-
-            print(f"Scraping detailed page with Firecrawl for: {full_url}")
-            detailed_info = scrape_detailed_alert_info_with_firecrawl(full_url)
-            df.at[0, 'detailed_title'] = detailed_info['detailed_title']
-            df.at[0, 'detailed_content'] = detailed_info['detailed_content']
-            return df
-    return pd.DataFrame()
-
 if __name__ == "__main__":
-    html_snippet = """<a data-ga4-ecommerce-path="/drug-safety-update/abrysvov-pfizer-rsv-vaccine-and-arexvyv-gsk-rsv-vaccine-be-alert-to-a-small-risk-of-guillain-barre-syndrome-following-vaccination-in-older-adults" data-ga4-ecommerce-content-id="c76264b0-cd2b-4670-8544-a5d79655f26f" data-ga4-ecommerce-row="1" data-ga4-ecommerce-index="1" class="  govuk-link gem-c-force-print-link-styles govuk-link--no-underline" href="/drug-safety-update/abrysvov-pfizer-rsv-vaccine-and-arexvyv-gsk-rsv-vaccine-be-alert-to-a-small-risk-of-guillain-barre-syndrome-following-vaccination-in-older-adults">Abrysvo▼ (Pfizer RSV vaccine) and Arexvy▼ (GSK RSV vaccine): be alert to a small risk of Guillain-Barré syndrome following vaccination in older adults</a>"""
-
-    single_alert_df = process_single_html_extract(html_snippet)
-    print(f"\n--- Processed Single HTML Extract DataFrame ({len(single_alert_df)} rows) ---")
-    if not single_alert_df.empty:
-        print(single_alert_df.head())
-        # Save to CSV for inspection
-        single_alert_df.to_csv("single_alert_extract.csv", index=False)
-        print("\nSaved extracted and scraped data to single_alert_extract.csv")
+    print("Starting drug safety updates scraping...")
+    df_scraped = scrape_drug_safety_updates()
+    print("\n--- Scraped Drug Safety Updates DataFrame ---")
+    if not df_scraped.empty:
+        print(df_scraped.head())
     else:
-        print("Failed to process the HTML extract.")
+        print("No data was scraped.")
