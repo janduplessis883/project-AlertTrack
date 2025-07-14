@@ -61,6 +61,7 @@ def scrape_drug_safety_updates():
 if __name__ == "__main__":
     # Scrape the drug safety updates and print the DataFrame
     df = scrape_drug_safety_updates()
+    df.to_csv("data.csv", index=False)
     print(df)
     # Optionally, save the DataFrame to a CSV file
     # df.to_csv("drug_safety_updates_with_content.csv", index=False)
