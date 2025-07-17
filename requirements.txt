@@ -4,4 +4,8 @@ beautifulsoup4
 pandas
 firecrawl-py
 tqdm
+<<<<<<< HEAD
 PyPDF2
+=======
+groq
+>>>>>>> c8d87834acb714919420574ca0ddfd8b6f5c56d4

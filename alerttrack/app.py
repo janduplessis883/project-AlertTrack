@@ -35,7 +35,7 @@ def main():
 
     # Load the dataframe
     try:
-        df = pd.read_csv("data/data.csv")
+        df = pd.read_csv("data.csv")
         st.write("Data loaded successfully!")
 
         # Define the columns to display
