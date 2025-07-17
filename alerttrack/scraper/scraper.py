@@ -3,37 +3,22 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 from urllib.parse import urljoin
 import pandas as pd
-from firecrawl import FirecrawlApp
+from firecrawl import FirecrawlApp, JsonConfig
+from pydantic import BaseModel, Field
+from typing import Optional
 import os
-import time # Added for rate limiting
-from tqdm import tqdm # Added for progress bar
+from tqdm import tqdm
+import time
 
 # It's recommended to set the API key as an environment variable
+# For this example, we'll use the provided key directly, but this is not best practice
 FIRECRAWL_API_KEY = os.getenv('FIRECRAWL_API_KEY')
 # Initialize FirecrawlApp
+# It will automatically use the FIRECRAWL_API_KEY environment variable if set,
+# otherwise you can pass it as an argument: FirecrawlApp(api_key="YOUR_API_KEY")
 app = FirecrawlApp(api_key=FIRECRAWL_API_KEY)
 
-
 BASE_URL_DRUG_SAFETY = "https://www.gov.uk/drug-safety-update"
-
-def scrape_detailed_alert_info_with_firecrawl(url):
-    """
-    Scrapes a detailed alert page using Firecrawl to get markdown content.
-    """
-    try:
-        scraped_data = app.scrape_url(url, params={'pageOptions': {'onlyMainContent': True}})
-        if scraped_data and 'markdown' in scraped_data:
-            # The detailed title is usually the first line of the markdown
-            lines = scraped_data['markdown'].split('\n')
-            detailed_title = lines[0].strip('# ') if lines else ""
-            detailed_content = scraped_data['markdown']
-            return {'detailed_title': detailed_title, 'detailed_content': detailed_content}
-        else:
-            print(f"Firecrawl failed to return markdown for {url}")
-            return {'detailed_title': None, 'detailed_content': None}
-    except Exception as e:
-        print(f"An error occurred while scraping with Firecrawl for {url}: {e}")
-        return {'detailed_title': None, 'detailed_content': None}
 
 def scrape_drug_safety_updates():
     """
@@ -41,70 +26,98 @@ def scrape_drug_safety_updates():
     Returns a pandas DataFrame.
     """
     listing_data = []
-    try:
-        print(f"Scraping listing page with requests: {BASE_URL_DRUG_SAFETY}")
-        response = requests.get(BASE_URL_DRUG_SAFETY)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.content, 'html.parser')
 
-        alerts = []
-        for li in soup.select('ul.gem-c-document-list li'):
-            link = li.find('a')
-            # Find the date text directly within the list item
-            # Only proceed if a link is found
-            if link and isinstance(link, Tag): # Ensure link is a Tag object
-                date_text = li.get_text(strip=True).replace(link.get_text(strip=True), '').strip()
+    print(f"Scraping listing page with requests: {BASE_URL_DRUG_SAFETY}")
+    response = requests.get(BASE_URL_DRUG_SAFETY)
+    response.raise_for_status()
+    soup = BeautifulSoup(response.content, 'html.parser')
 
-                if date_text:
-                    title = link.get_text(strip=True)
-                    href_attr = link.get('href') # Use .get() to safely retrieve attribute
-                    if href_attr and isinstance(href_attr, str): # Ensure href_attr is a string
-                        full_url = urljoin(BASE_URL_DRUG_SAFETY, href_attr)
+    alerts = []
+    for li in soup.select('ul.gem-c-document-list li'):
+        link = li.find('a')
+        # Find the date text directly within the list item
+        # Only proceed if a link is found
+        if link and isinstance(link, Tag): # Ensure link is a Tag object
+            title = link.get_text(strip=True)
+            href_attr = link.get('href')
+            full_url = None
+            if href_attr and isinstance(href_attr, str): # Ensure href_attr is a string
+                full_url = urljoin(BASE_URL_DRUG_SAFETY, href_attr)
 
-                        # Assuming the date format is consistent, you might need to adjust this
-                        # if the format varies.
-                        published_date = pd.to_datetime(date_text, errors='coerce')
+            # Find the time tag within the current list item
+            time_tag = li.find('time')
+            published_date = None
+            if time_tag and isinstance(time_tag, Tag) and time_tag.get('datetime'):
+                date_str = time_tag.get('datetime')
+                if isinstance(date_str, str): # Ensure date_str is a string
+                    published_date = pd.to_datetime(date_str, errors='coerce')
 
-                        alerts.append({'publish_date': published_date, 'title': title, 'url': full_url})
-        listing_data = alerts
+            if published_date is not None and full_url is not None:
+                alerts.append({'publish_date': published_date, 'title': title, 'url': full_url})
+    listing_data = alerts
 
-    except requests.exceptions.RequestException as e:
-        print(f"Error during request for listing page {BASE_URL_DRUG_SAFETY}: {e}")
-        return pd.DataFrame()
-    except Exception as e:
-        print(f"An error occurred during listing scraping: {e}")
-        return pd.DataFrame()
-
-    if not listing_data:
-        print("No alerts found on the listing page.")
-        return pd.DataFrame()
-
+    print(listing_data)
     df = pd.DataFrame(listing_data)
-    df['detailed_title'] = None
-    df['detailed_content'] = None
-
-    print(f"\nScraping detailed pages with Firecrawl for {len(df)} alerts...")
-    for index, row in tqdm(df.iterrows(), total=len(df)): # Using tqdm for progress bar
-        url = row['url']
-        if url:
-            # print(f"Scraping: {url}") # Removed to avoid excessive output with tqdm
-            detailed_info = scrape_detailed_alert_info_with_firecrawl(url)
-            df.at[index, 'detailed_title'] = detailed_info['detailed_title']
-            df.at[index, 'detailed_content'] = detailed_info['detailed_content']
-            time.sleep(10) # Added to avoid rate limits
-        # else: # Removed to avoid excessive output with tqdm
-            # print(f"Skipping detailed scrape for row {index} due to missing URL.")
-
-    df.to_csv('data.csv', index=False) # Save the DataFrame to data.csv
-    print("\nSaved scraped data to data.csv")
-
     return df
 
+class AlertExtractSchema(BaseModel):
+    document_download_url: Optional[str] = Field(
+        None,
+        description="The full URL for the 'Download Document' link on the page. It should end with .pdf"
+    )
+
+def scrape_pdf_urls(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Scrapes each URL in the DataFrame to extract the 'Document Download' URL using Firecrawl's LLM extraction.
+    """
+    print("Extracting PDF URLs for each alert using Firecrawl...")
+    pdf_urls = []
+
+    json_config = JsonConfig(
+        schema=AlertExtractSchema,
+        prompt="Extract the URL for the 'Download Document' link from the page content."
+    )
+
+    global app
+    if 'app' not in globals() or app is None:
+        app = FirecrawlApp(api_key=os.getenv('FIRECRAWL_API_KEY'))
+
+    for index, row in tqdm(df.iterrows(), total=len(df)):
+        url = row['url']
+        try:
+            llm_extraction_result = app.scrape_url(
+                url,
+                formats=["json"],
+                json_options=json_config,
+                only_main_content=False, # Search the whole page
+                timeout=120000
+            )
+            pdf_url = llm_extraction_result.json.get('document_download_url') if llm_extraction_result.json else None
+            pdf_urls.append(pdf_url)
+        except Exception as e:
+            print(f"Error extracting from {url}: {e}")
+            pdf_urls.append(None)
+        time.sleep(2) # Add a small delay to be mindful of rate limits
+
+    df['alert_pdf'] = pdf_urls
+    return df
+
+
 if __name__ == "__main__":
-    print("Starting drug safety updates scraping...")
-    df_scraped = scrape_drug_safety_updates()
-    print("\n--- Scraped Drug Safety Updates DataFrame ---")
-    if not df_scraped.empty:
-        print(df_scraped.head())
-    else:
-        print("No data was scraped.")
+    # Scrape the drug safety updates and create the initial DataFrame
+    df = scrape_drug_safety_updates()
+
+    # Extract PDF URLs for each alert
+    df = scrape_pdf_urls(df)
+
+    # Save the resulting DataFrame to CSV
+    output_path = "data/data.csv"
+
+    # We don't need the 'detail' column anymore, so let's select the ones we want
+    columns_to_save = ['publish_date', 'title', 'url', 'alert_pdf']
+    df_to_save = df[columns_to_save]
+
+    df_to_save.to_csv(output_path, index=False)
+
+    print(f"DataFrame saved to {output_path}")
+    print(df.head())

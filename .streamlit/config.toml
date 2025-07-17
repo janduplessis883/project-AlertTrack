@@ -1,10 +1,33 @@
 [theme]
-primaryColor="#be185d"
-backgroundColor="#FFFFFF"
-secondaryBackgroundColor="#F0F2F6"
-textColor="#334155"
-font="sans serif"
+
+# Base colors can be 'light' or 'dark'
+base = "light"
+
+# Primary color for your app, specified as a hex or named CSS color
+primaryColor = "#5392c6"
+linkColor = "#5392c6"
+
+
+
+# Background color for your app
+backgroundColor = "#fafafa"
+
+# Secondary background color for your app
+secondaryBackgroundColor = "#eaeae6"
+
+# Text color for your app
+textColor = "#152944"
+
+# Font for your app, choose between "sans serif", "serif", and "monospace"
+font = "sans serif"
+
+baseRadius = "medium"
+
+[deprecation]
+showPyplotGlobalUse = false
 
 [server]
-# Enable CORS
-enableCORS = true
+enableStaticServing = false
+
+[upload]
+file_formats = ["csv", "xlsx"]

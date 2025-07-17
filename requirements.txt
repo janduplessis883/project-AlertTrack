@@ -4,3 +4,4 @@ beautifulsoup4
 pandas
 firecrawl-py
 tqdm
+PyPDF2
