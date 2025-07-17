@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Heimdal Security - Blocked Page</title>
+    <link rel="stylesheet" href="https://prodcdn.heimdalsecurity.com/resources/blockpage/css/custom-block-page.min.css">
+    <link rel="stylesheet" href="https://prodcdn.heimdalsecurity.com/resources/blockpage/css/blockPage.min.css">
+</head>
+<body>
+    <section id="defaultHeimdalBlockPage" style="display:none">
+        <div class="top-menu">
+            <div class="container">
+                <div class="menu-wrapper">
+                    <a href="https://heimdalsecurity.com/" target="_blank" rel="noopener noreferrer">
+                        <img src="https://prodcdn.heimdalsecurity.com/resources/blockpage/img/heimdal-logo.svg" alt="Heimdal Logo">
+                    </a>
+
+                    <div class="logos-container">
+                        <a href="https://www.facebook.com/HeimdalSec" target="_blank"
+                           rel="noopener noreferrer"><img src="https://prodcdn.heimdalsecurity.com/resources/blockpage/img/facebook-logo.svg" alt="Facebook Logo"></a>
+                        <a href="https://www.instagram.com/heimdalsecurity/" target="_blank"
+                           rel="noopener noreferrer"><img src="https://prodcdn.heimdalsecurity.com/resources/blockpage/img/instagram-logo.svg" alt="Instagram Logo"></a>
+                        <a href="https://twitter.com/HeimdalSecurity" target="_blank"
+                           rel="noopener noreferrer"><img src="https://prodcdn.heimdalsecurity.com/resources/blockpage/img/twitter-logo.svg" alt="Twitter Logo"></a>
+                        <a href="https://www.youtube.com/channel/UC1WREdcXesu7Fs4qAP6SxRQ"
+                           target="_blank"
+                           rel="noopener noreferrer"><img src="https://prodcdn.heimdalsecurity.com/resources/blockpage/img/youtube-logo.svg" alt="Youtube Logo"></a>
+                        <a href="https://www.linkedin.com/company/heimdal-security/" target="_blank"
+                           rel="noopener noreferrer"><img src="https://prodcdn.heimdalsecurity.com/resources/blockpage/img/linkedin-logo.svg" alt="Linkedin Logo"></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content text-center">
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="default-logo">
+                            <img src="https://prodcdn.heimdalsecurity.com/resources/blockpage/img/block.svg" alt="Block Sign">
+                        </div>
+                        <h1><span class="bold-text">Heimdal<sup>®</sup> Enterprise </span> has blocked this page.</h1>
+                        <p class="subtitle">
+                            The web location you are trying to access may trigger phishing attempts
+                            <br> or contain malicious content which could affect your system.
+                        </p>
+                        <p>
+                            If you consider this is a safe online location, contact us at <a href="mailto:b2bsupport@heimdalsecurity.com">b2bsupport@heimdalsecurity.com</a> to
+                            analyze it and we’ll get back to you.
+                        </p>
+                        <p>
+                            Learn more about the way that Heimdal<sup>®</sup> protects you against cyber threats such as
+                            malicious websites: <a href="https://heimdalsecurity.com/whyheimdal" target="_blank"
+                                                   rel="noopener noreferrer">Why Heimdal<sup>®</sup></a>.
+                        </p>
+                        <p>
+                            You can also discover free security guides and actionable resources on our <a href="https://heimdalsecurity.com/blog/" target="_blank"
+                                                                                                          rel="noopener noreferrer">blog</a>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="loader">
+        <div class="center">
+            <div class="spinner"></div>
+        </div>
+    </section>
+    <section id="customBlockPage" style="display:none">
+        <div class="main-content text-center">
+            <div class="container">
+                <div id="heimdalBlockSign" class="row">
+                    <div class="col-sm-12">
+                        <img src="https://prodcdn.heimdalsecurity.com/resources/blockpage/img/block.svg" alt="Block Sign" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <img id="companyLogo" src="https://prodcdn.heimdalsecurity.com/resources/blockpage/img/heimdal-logo.svg" alt="Heimdal Logo" />
+                        <h1>
+                            <span class="bold-text" id="companyName">Heimdal<sup>®</sup> Enterprise</span>
+                        </h1>
+                        <h2>
+                            <span id="message">has blocked this page.</span>
+                        </h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <script src="https://prodcdn.heimdalsecurity.com/resources/blockpage/js/blockPage.min.js">
+    </script>
+</body>
+</html>
